@@ -6,6 +6,7 @@ import Transactions from './pages/Transactions';
 import Budgets      from './pages/Budgets';
 import Reports      from './pages/Reports';
 import LoginPage    from './pages/LoginPage';
+import TrialBlockedScreen from './pages/TrialBlockedScreen';
 import { LayoutDashboard, ListOrdered, Target, BarChart2, Trash2, LogOut } from 'lucide-react';
 import { useFinance } from './context/FinanceContext';
 
@@ -21,12 +22,16 @@ const NAV = [
 function Shell() {
   const [page, setPage] = useState<Page>('dashboard');
   const { clearAll } = useFinance();
-  const { user, signOut } = useAuth();
+  const { user, signOut, profile } = useAuth();
   const now = new Date();
 
   const handleClear = () => {
     if (confirm('Apagar TODOS os dados? Esta ação não pode ser desfeita.')) clearAll();
   };
+
+  const daysLeft = profile
+    ? Math.max(0, Math.ceil((new Date(profile.trial_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   const PageComponent = {
     dashboard: Dashboard,
@@ -41,6 +46,15 @@ function Shell() {
         <div className="sidebar-logo">
           <h1>💰 Controle de Gastos</h1>
           <p style={{ fontSize: '11px', opacity: 0.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
+          {profile?.plan === 'trial' && daysLeft > 0 && (
+            <div style={{
+              marginTop: '6px', padding: '4px 8px', borderRadius: '6px',
+              background: 'rgba(255,193,7,0.15)', border: '1px solid rgba(255,193,7,0.3)',
+              fontSize: '11px', color: '#ffc107'
+            }}>
+              ⏱ {daysLeft} dia{daysLeft !== 1 ? 's' : ''} de trial restante{daysLeft !== 1 ? 's' : ''}
+            </div>
+          )}
         </div>
         <nav className="sidebar-nav">
           {NAV.map(item => {
@@ -95,7 +109,7 @@ function Shell() {
 }
 
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { user, loading, trialExpired } = useAuth();
 
   if (loading) return (
     <div style={{
@@ -107,6 +121,7 @@ function AppContent() {
   );
 
   if (!user) return <LoginPage />;
+  if (trialExpired) return <TrialBlockedScreen />;
 
   return (
     <FinanceProvider>
