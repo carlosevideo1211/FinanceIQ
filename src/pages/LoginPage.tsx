@@ -23,7 +23,7 @@ export default function LoginPage() {
       if (error) setError('Email ou senha incorretos.')
     } else {
       const { error } = await signUp(email, password)
-      if (error) setError(error)
+      if (error) setError(error.includes('Database') || error.includes('unexpected') ? 'Erro ao criar conta. Tente outro email ou senha mais forte.' : error)
       else setSuccess('Conta criada! Verifique seu email para confirmar.')
     }
     setLoading(false)
