@@ -15,6 +15,18 @@ export interface Transaction {
   createdAt: string;
 }
 
+export interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+  target_amount: number;
+  current_amount: number;
+  deadline?: string; // YYYY-MM-DD
+  category: string;
+  color: string;
+  created_at: string;
+}
+
 export interface Budget {
   id: string;
   category: string;

@@ -5,18 +5,20 @@ import Dashboard    from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Budgets      from './pages/Budgets';
 import Reports      from './pages/Reports';
+import Goals       from './pages/Goals';
 import LoginPage    from './pages/LoginPage';
 import TrialBlockedScreen from './pages/TrialBlockedScreen';
 import { LayoutDashboard, ListOrdered, Target, BarChart2, Trash2, LogOut } from 'lucide-react';
 import { useFinance } from './context/FinanceContext';
 
-type Page = 'dashboard' | 'transactions' | 'budgets' | 'reports';
+type Page = 'dashboard' | 'transactions' | 'budgets' | 'reports' | 'goals';
 
 const NAV = [
   { id: 'dashboard'    as Page, label: 'Início',       icon: LayoutDashboard },
   { id: 'transactions' as Page, label: 'Lançamentos',  icon: ListOrdered     },
   { id: 'budgets'      as Page, label: 'Orçamentos',   icon: Target          },
   { id: 'reports'      as Page, label: 'Relatórios',   icon: BarChart2       },
+  { id: 'goals'        as Page, label: 'Metas',         icon: Target          },
 ];
 
 function Shell() {
@@ -38,6 +40,7 @@ function Shell() {
     transactions: Transactions,
     budgets: Budgets,
     reports: Reports,
+    goals: Goals,
   }[page];
 
   return (
