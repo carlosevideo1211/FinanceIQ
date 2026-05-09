@@ -6,6 +6,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 import { ChevronLeft, ChevronRight, FileDown, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 export default function Reports() {
   const { transactions } = useFinance();
@@ -102,18 +103,83 @@ export default function Reports() {
   };
 
   const exportCSV = () => {
-    const header = 'Data,Descrição,Categoria,Tipo,Valor\n';
-    const rows = monthTxs.map(t =>
-      `${t.date},"${t.description}","${CATEGORIES[t.category]?.label ?? t.category}",${t.type === 'income' ? 'Receita' : 'Despesa'},${t.amount.toFixed(2)}`
-    ).join('\n');
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + header + rows], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `financeiro-${month}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const titleRow = [`Relatório Financeiro - ${mLabel(month)}`, '', '', '', ''];
+    const geradoRow = [`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, '', '', '', ''];
+    const emptyRow = ['', '', '', '', ''];
+    const summaryTitle = ['RESUMO DO MÊS', '', '', '', ''];
+    const summaryRows = [
+      ['Total Recebido', '', '', '', income],
+      ['Total Gasto', '', '', '', expense],
+      ['Saldo Final', '', '', '', balance],
+    ];
+    const dataHeader = ['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor (R$)'];
+    const dataRows = monthTxs.map(t => [
+      new Date(t.date + 'T12:00:00').toLocaleDateString('pt-BR'),
+      t.description,
+      CATEGORIES[t.category]?.label ?? t.category,
+      t.type === 'income' ? 'Receita' : 'Despesa',
+      t.amount,
+    ]);
+    const totalRow = ['', '', '', 'TOTAL RECEITAS', income];
+    const totalRow2 = ['', '', '', 'TOTAL DESPESAS', expense];
+    const totalRow3 = ['', '', '', 'SALDO', balance];
+
+    const wsData = [
+      titleRow, geradoRow, emptyRow,
+      summaryTitle, ...summaryRows, emptyRow,
+      dataHeader, ...dataRows, emptyRow,
+      totalRow, totalRow2, totalRow3
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 4 } },
+    ];
+
+    // Estilo do título
+    const titleStyle = { font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '6C63FF' } }, alignment: { horizontal: 'center' } };
+    const headerStyle = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '6C63FF' } }, alignment: { horizontal: 'center' } };
+    const summaryTitleStyle = { font: { bold: true, sz: 11 }, fill: { fgColor: { rgb: 'EEF2FF' } } };
+    const incomeStyle = { font: { bold: true, color: { rgb: '16A34A' } }, numFmt: 'R$ #,##0.00' };
+    const expenseStyle = { font: { bold: true, color: { rgb: 'DC2626' } }, numFmt: 'R$ #,##0.00' };
+    const balanceStyle = { font: { bold: true, color: { rgb: '6C63FF' } }, numFmt: 'R$ #,##0.00' };
+    const numStyle = { numFmt: 'R$ #,##0.00' };
+
+    // Aplicar estilos
+    if (ws['A1']) ws['A1'].s = titleStyle;
+    if (ws['A2']) ws['A2'].s = { font: { italic: true, color: { rgb: '666666' } }, alignment: { horizontal: 'center' } };
+    if (ws['A4']) ws['A4'].s = summaryTitleStyle;
+
+    // Resumo valores
+    if (ws['E5']) ws['E5'].s = incomeStyle;
+    if (ws['E6']) ws['E6'].s = expenseStyle;
+    if (ws['E7']) ws['E7'].s = balanceStyle;
+
+    // Cabeçalho da tabela (linha 9)
+    const headerRow = 8;
+    ['A','B','C','D','E'].forEach(col => {
+      if (ws[`${col}${headerRow}`]) ws[`${col}${headerRow}`].s = headerStyle;
+    });
+
+    // Valores da coluna E (dados)
+    const dataStart = 9;
+    for (let i = 0; i < dataRows.length; i++) {
+      const cell = ws[`E${dataStart + i}`];
+      if (cell) cell.s = numStyle;
+    }
+
+    // Totais finais
+    const totalsStart = dataStart + dataRows.length + 1;
+    if (ws[`E${totalsStart}`]) ws[`E${totalsStart}`].s = incomeStyle;
+    if (ws[`E${totalsStart+1}`]) ws[`E${totalsStart+1}`].s = expenseStyle;
+    if (ws[`E${totalsStart+2}`]) ws[`E${totalsStart+2}`].s = balanceStyle;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `${mLabel(month)}`);
+    XLSX.writeFile(wb, `financeiro-${month}.xlsx`);
   };
 
   return (
