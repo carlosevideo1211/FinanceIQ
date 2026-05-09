@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileDown, FileSpreadsheet } from 'lucide-react';
 
 export default function Reports() {
   const { transactions } = useFinance();
@@ -54,12 +54,92 @@ export default function Reports() {
     return s.charAt(0).toUpperCase() + s.slice(1);
   };
 
+
+  const exportPDF = () => {
+    const rows = monthTxs.map(t => `
+      <tr>
+        <td>${new Date(t.date + 'T12:00:00').toLocaleDateString('pt-BR')}</td>
+        <td>${t.description}</td>
+        <td>${CATEGORIES[t.category]?.label ?? t.category}</td>
+        <td style="color:${t.type === 'income' ? '#22c55e' : '#ef4444'}">${t.type === 'income' ? '+' : '-'}R$ ${t.amount.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Relatório ${mLabel(month)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 32px; color: #1a1a2e; }
+      h1 { color: #6C63FF; margin-bottom: 4px; }
+      .subtitle { color: #666; margin-bottom: 24px; font-size: 14px; }
+      .summary { display: flex; gap: 16px; margin-bottom: 24px; }
+      .kpi { background: #f8f9fa; border-radius: 8px; padding: 16px; flex: 1; text-align: center; }
+      .kpi-label { font-size: 12px; color: #666; margin-bottom: 4px; }
+      .kpi-value { font-size: 20px; font-weight: 700; }
+      .income { color: #22c55e; } .expense { color: #ef4444; } .balance { color: #6C63FF; }
+      table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+      th { background: #6C63FF; color: white; padding: 10px 12px; text-align: left; font-size: 13px; }
+      td { padding: 9px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+      tr:nth-child(even) { background: #f8f9fa; }
+      .footer { margin-top: 24px; font-size: 11px; color: #999; text-align: center; }
+      @media print { body { padding: 16px; } }
+    </style></head><body>
+    <h1>💰 Relatório Financeiro</h1>
+    <div class="subtitle">Período: ${mLabel(month)} • Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
+    <div class="summary">
+      <div class="kpi"><div class="kpi-label">Total Recebido</div><div class="kpi-value income">R$ ${income.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="kpi-label">Total Gasto</div><div class="kpi-value expense">R$ ${expense.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+      <div class="kpi"><div class="kpi-label">Saldo Final</div><div class="kpi-value balance">R$ ${balance.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+    </div>
+    <table><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="4" style="text-align:center;color:#999">Sem lançamentos neste mês</td></tr>'}</tbody></table>
+    <div class="footer">FinanceIQ — Controle de Gastos Pessoal</div>
+    </body></html>`;
+
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (!w) { alert('Permita popups para exportar PDF'); return; }
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => { w.print(); }, 500);
+  };
+
+  const exportCSV = () => {
+    const header = 'Data,Descrição,Categoria,Tipo,Valor\n';
+    const rows = monthTxs.map(t =>
+      `${t.date},"${t.description}","${CATEGORIES[t.category]?.label ?? t.category}",${t.type === 'income' ? 'Receita' : 'Despesa'},${t.amount.toFixed(2)}`
+    ).join('\n');
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `financeiro-${month}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <div className="page-header">
         <div>
           <h2>Relatório Mensal</h2>
           <p>Análise completa das suas finanças</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={exportCSV} style={{
+            display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+            background: 'rgba(34,197,94,0.15)', color: '#22c55e',
+            border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8,
+            fontWeight: 600, cursor: 'pointer', fontSize: 13
+          }}>
+            <FileSpreadsheet size={15} /> Excel
+          </button>
+          <button onClick={exportPDF} style={{
+            display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+            background: 'rgba(108,99,255,0.15)', color: '#6C63FF',
+            border: '1px solid rgba(108,99,255,0.3)', borderRadius: 8,
+            fontWeight: 600, cursor: 'pointer', fontSize: 13
+          }}>
+            <FileDown size={15} /> PDF
+          </button>
         </div>
       </div>
 
