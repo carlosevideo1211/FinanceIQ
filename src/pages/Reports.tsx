@@ -1,15 +1,18 @@
 import { useMemo, useState } from 'react';
+import PremiumLock from '../components/PremiumLock';
 import { useFinance, filterByMonth, sumByType, groupByCategory, formatBRL, monthLabel } from '../context/FinanceContext';
 import { CATEGORIES } from '../types';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
+import { useAuth } from '../context/AuthContext';
 import { ChevronLeft, ChevronRight, FileDown, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function Reports() {
   const { transactions } = useFinance();
+  const { isPremium } = useAuth();
   const now = new Date();
   const [month, setMonth] = useState(now.toISOString().slice(0, 7));
 
@@ -190,21 +193,21 @@ export default function Reports() {
           <p>Análise completa das suas finanças</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={exportCSV} style={{
+          <button onClick={isPremium ? exportCSV : () => alert('Funcionalidade Premium! Faça upgrade para exportar Excel.')} style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
             background: 'rgba(34,197,94,0.15)', color: '#22c55e',
             border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8,
             fontWeight: 600, cursor: 'pointer', fontSize: 13
           }}>
-            <FileSpreadsheet size={15} /> Excel
+            <FileSpreadsheet size={15} /> {isPremium ? 'Excel' : '🔒 Excel'}
           </button>
-          <button onClick={exportPDF} style={{
+          <button onClick={isPremium ? exportPDF : () => alert('Funcionalidade Premium! Faça upgrade para exportar PDF.')} style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
             background: 'rgba(108,99,255,0.15)', color: '#6C63FF',
             border: '1px solid rgba(108,99,255,0.3)', borderRadius: 8,
             fontWeight: 600, cursor: 'pointer', fontSize: 13
           }}>
-            <FileDown size={15} /> PDF
+            <FileDown size={15} /> {isPremium ? 'PDF' : '🔒 PDF'}
           </button>
         </div>
       </div>

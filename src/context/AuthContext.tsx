@@ -16,6 +16,7 @@ interface AuthContextType {
   profile: Profile | null
   loading: boolean
   trialExpired: boolean
+  isPremium: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  const isPremium = profile ? ['premium', 'premium_anual', 'basico_anual'].includes(profile.plan) : false;
   const trialExpired = profile
     ? profile.plan === 'trial' && new Date(profile.trial_end) < new Date()
     : false
@@ -73,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, trialExpired, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, trialExpired, isPremium, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   )

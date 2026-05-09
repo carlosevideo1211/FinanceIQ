@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Target, Plus, Trash2, Edit2, TrendingUp, Calendar, Check, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import PremiumLock from '../components/PremiumLock';
 
 interface Goal {
   id: string;
@@ -51,7 +52,9 @@ function monthsToGoal(current: number, target: number, monthlyAvg: number): stri
 const emptyForm = { title: '', description: '', target_amount: '', current_amount: '', deadline: '', category: 'outros', color: GOAL_COLORS[0] };
 
 export default function Goals() {
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
+
+  if (!isPremium) return <PremiumLock feature="🎯 Metas Financeiras" description="Defina objetivos e acompanhe seu progresso com o Plano Premium." />;
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
