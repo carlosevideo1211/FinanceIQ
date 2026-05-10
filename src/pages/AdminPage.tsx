@@ -81,6 +81,13 @@ export default function AdminPage() {
     setUpdating(null);
   };
 
+  const toggleActive = async (userId: string, currentActive: boolean) => {
+    setUpdating(userId);
+    await supabase.from('profiles').update({ active: !currentActive }).eq('id', userId);
+    await load();
+    setUpdating(null);
+  };
+
   const extendTrial = async (userId: string) => {
     setUpdating(userId);
     const newEnd = new Date();
@@ -188,7 +195,7 @@ export default function AdminPage() {
                 <tbody>
                   {filtered.map(u => (
                     <tr key={u.id} style={{ borderTop: '1px solid var(--border)' }}>
-                      <td style={{ padding: '14px 16px', fontSize: 14 }}>
+                      <td style={{ padding: '14px 16px', fontSize: 14, opacity: u.active === false ? 0.5 : 1 }}>
                         <div style={{ fontWeight: 600 }}>{u.email}</div>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{u.id.slice(0,8)}...</div>
                       </td>
@@ -220,6 +227,13 @@ export default function AdminPage() {
                           >
                             {PLANS.map(p => <option key={p} value={p}>{planLabel[p] || p}</option>)}
                           </select>
+                          <button
+                              onClick={() => toggleActive(u.id, u.active !== false)}
+                              disabled={updating === u.id}
+                              style={{ padding: '6px 10px', background: u.active === false ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', color: u.active === false ? '#22c55e' : '#ef4444', border: `1px solid ${u.active === false ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: 6, fontSize: 11, cursor: 'pointer', fontWeight: 600 }}
+                            >
+                              {u.active === false ? '✅ Ativar' : '🚫 Desativar'}
+                            </button>
                           {u.plan === 'trial' && (
                             <button
                               onClick={() => extendTrial(u.id)}
