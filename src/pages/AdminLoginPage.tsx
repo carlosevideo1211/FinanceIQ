@@ -18,6 +18,30 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [success, setSuccess] = useState('');
+  const [resetMode, setResetMode] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleReset = () => {
+    setError('');
+    setSuccess('');
+    if (!email) { setError('Digite seu email de admin.'); return; }
+    if (email !== ADMIN_EMAIL) { setError('Email não autorizado.'); return; }
+    if (!newPassword) { setError('Digite a nova senha.'); return; }
+    if (newPassword !== confirmPassword) { setError('Senhas não coincidem.'); return; }
+    if (newPassword.length < 6) { setError('Senha deve ter pelo menos 6 caracteres.'); return; }
+    setLoading(true);
+    setTimeout(() => {
+      // Store new password in localStorage
+      localStorage.setItem('admin_custom_password', newPassword);
+      setSuccess('Senha redefinida com sucesso! Faça login com a nova senha.');
+      setResetMode(false);
+      setNewPassword('');
+      setConfirmPassword('');
+      setLoading(false);
+    }, 800);
+  };
 
   const handleReset = () => {
     setError('');
