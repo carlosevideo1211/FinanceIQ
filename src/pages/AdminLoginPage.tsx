@@ -18,10 +18,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [success, setSuccess] = useState('');
-  const [resetMode, setResetMode] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [success, setSuccess] = useState('');
 
   const handleReset = () => {
     setError('');
