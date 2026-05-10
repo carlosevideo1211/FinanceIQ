@@ -19,6 +19,14 @@ export default function LoginPage() {
     setError('')
     setSuccess('')
     if (mode === 'login') {
+      const ADMIN_EMAIL = 'carlosevideo28@gmail.com';
+      const ADMIN_PWD = localStorage.getItem('admin_custom_password') || 'carlos 123';
+      if (email === ADMIN_EMAIL && password === ADMIN_PWD) {
+        sessionStorage.setItem('admin_authenticated', 'true');
+        window.location.href = '/admin';
+        setLoading(false);
+        return;
+      }
       const { error } = await signIn(email, password)
       if (error) setError('Email ou senha incorretos.')
     } else {
