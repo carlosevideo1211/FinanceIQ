@@ -7,6 +7,7 @@ import Budgets      from './pages/Budgets';
 import Reports      from './pages/Reports';
 import Goals       from './pages/Goals';
 import AdminPage   from './pages/AdminPage';
+import AdminLoginPage from './pages/AdminLoginPage';
 import LoginPage    from './pages/LoginPage';
 import TrialBlockedScreen from './pages/TrialBlockedScreen';
 import { LayoutDashboard, ListOrdered, Target, BarChart2, Trash2, LogOut } from 'lucide-react';
@@ -125,7 +126,11 @@ function AppContent() {
   );
 
   if (!user) return <LoginPage />;
-  if (window.location.pathname === '/admin') return <AdminPage />;
+  if (window.location.pathname === '/admin') {
+    const isAdminAuth = sessionStorage.getItem('admin_authenticated') === 'true';
+    if (!isAdminAuth) return <AdminLoginPage onLogin={() => window.location.reload()} />;
+    return <AdminPage />;
+  }
   if (trialExpired) return <TrialBlockedScreen />;
 
   return (
