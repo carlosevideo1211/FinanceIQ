@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Users, TrendingUp, Clock, Crown, Shield, Search, RefreshCw, LogOut } from 'lucide-react';
+import { Users, TrendingUp, Clock, Crown, Shield, Search, RefreshCw, LogOut, UserPlus, X, Check } from 'lucide-react';
 
 const ADMIN_EMAIL = 'carlosevideo28@gmail.com';
 
@@ -45,6 +45,11 @@ export default function AdminPage() {
   const [filter, setFilter] = useState('todos');
   const [updating, setUpdating] = useState<string | null>(null);
   const [stats, setStats] = useState({ total: 0, trial: 0, basico: 0, premium: 0, cancelado: 0 });
+  const [showNewUser, setShowNewUser] = useState(false);
+  const [newUser, setNewUser] = useState({ email: '', password: '', plan: 'trial', trialDays: '14' });
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [createSuccess, setCreateSuccess] = useState('');
 
   // Verificar se é admin
   if (user?.email !== ADMIN_EMAIL) {
@@ -105,6 +110,41 @@ export default function AdminPage() {
     return matchSearch && matchFilter;
   });
 
+  const createUser = async () => {
+    setCreateError('');
+    setCreateSuccess('');
+    if (!newUser.email.trim()) { setCreateError('Informe o email.'); return; }
+    if (!newUser.password || newUser.password.length < 6) { setCreateError('Senha deve ter pelo menos 6 caracteres.'); return; }
+    setCreating(true);
+    try {
+      // Create user in Supabase Auth
+      const { data, error } = await supabase.auth.admin.createUser({
+        email: newUser.email.trim(),
+        password: newUser.password,
+        email_confirm: true,
+      });
+      if (error) throw error;
+      // Create profile manually
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + parseInt(newUser.trialDays || '14'));
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        email: newUser.email.trim(),
+        trial_start: new Date().toISOString(),
+        trial_end: trialEnd.toISOString(),
+        plan: newUser.plan,
+        created_at: new Date().toISOString(),
+        active: true,
+      });
+      setCreateSuccess(`Usuário ${newUser.email} criado com sucesso!`);
+      setNewUser({ email: '', password: '', plan: 'trial', trialDays: '14' });
+      load();
+    } catch (err: any) {
+      setCreateError(err.message || 'Erro ao criar usuário.');
+    }
+    setCreating(false);
+  };
+
   const trialExpired = (u: UserProfile) => u.plan === 'trial' && new Date(u.trial_end) < new Date();
   const daysLeft = (u: UserProfile) => {
     const diff = new Date(u.trial_end).getTime() - new Date().getTime();
@@ -131,6 +171,9 @@ export default function AdminPage() {
           <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{user?.email}</span>
           <button onClick={load} style={{ padding: '8px', background: 'rgba(108,99,255,0.2)', border: 'none', borderRadius: 8, color: '#6C63FF', cursor: 'pointer' }}>
             <RefreshCw size={16} />
+          </button>
+          <button onClick={() => { setShowNewUser(true); setCreateError(''); setCreateSuccess(''); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'linear-gradient(135deg, #6C63FF, #a855f7)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+            <UserPlus size={16} /> Novo Inquilino
           </button>
           <button onClick={signOut} style={{ padding: '8px 14px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
             <LogOut size={14} /> Sair
@@ -253,6 +296,54 @@ export default function AdminPage() {
           )}
         </div>
       </div>
+      {/* Modal Novo Usuário */}
+      {showNewUser && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#1a1a2e', borderRadius: 16, padding: 28, width: '100%', maxWidth: 440, border: '1px solid rgba(108,99,255,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ margin: 0, color: '#fff', fontSize: 18 }}>👤 Novo Inquilino</h3>
+              <button onClick={() => setShowNewUser(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>EMAIL *</label>
+                <input style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(108,99,255,0.3)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, boxSizing: 'border-box' as const }}
+                  type="email" placeholder="email@exemplo.com" value={newUser.email}
+                  onChange={e => setNewUser(u => ({...u, email: e.target.value}))} />
+              </div>
+              <div>
+                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>SENHA *</label>
+                <input style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(108,99,255,0.3)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, boxSizing: 'border-box' as const }}
+                  type="password" placeholder="Mínimo 6 caracteres" value={newUser.password}
+                  onChange={e => setNewUser(u => ({...u, password: e.target.value}))} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>PLANO</label>
+                  <select style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(108,99,255,0.3)', background: '#1a1a2e', color: '#fff', fontSize: 14 }}
+                    value={newUser.plan} onChange={e => setNewUser(u => ({...u, plan: e.target.value}))}>
+                    {PLANS.map(p => <option key={p} value={p}>{planLabel[p] || p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>DIAS DE TRIAL</label>
+                  <input style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(108,99,255,0.3)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, boxSizing: 'border-box' as const }}
+                    type="number" min="1" max="365" value={newUser.trialDays}
+                    onChange={e => setNewUser(u => ({...u, trialDays: e.target.value}))} />
+                </div>
+              </div>
+              {createError && <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '10px 14px', color: '#ef4444', fontSize: 13 }}>{createError}</div>}
+              {createSuccess && <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: '10px 14px', color: '#22c55e', fontSize: 13 }}>{createSuccess}</div>}
+              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                <button onClick={() => setShowNewUser(false)} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+                <button onClick={createUser} disabled={creating} style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg, #6C63FF, #a855f7)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: creating ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  {creating ? 'Criando...' : <><Check size={16} /> Criar Inquilino</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
