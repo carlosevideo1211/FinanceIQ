@@ -55,13 +55,13 @@ export default function TransactionModal({ onClose, initial }: Props) {
         <form className="modal-body" onSubmit={handleSubmit}>
           {/* Tipo */}
           <div className="form-group">
-            <label>Tipo</label>
+            <label className="form-label">Tipo</label>
             <div className="type-toggle">
-              <button type="button" className={`type-btn ${type === 'expense' ? 'active expense' : ''}`}
+              <button type="button" className={`type-btn ${type === 'expense' ? 'active-expense' : ''}`}
                 onClick={() => { setType('expense'); setCategory(''); }}>
                 Despesa
               </button>
-              <button type="button" className={`type-btn ${type === 'income' ? 'active income' : ''}`}
+              <button type="button" className={`type-btn ${type === 'income' ? 'active-income' : ''}`}
                 onClick={() => { setType('income'); setCategory(''); }}>
                 Receita
               </button>
@@ -70,22 +70,22 @@ export default function TransactionModal({ onClose, initial }: Props) {
 
           {/* Valor */}
           <div className="form-group">
-            <label>Valor (R$)</label>
-            <input className="input" type="number" step="0.01" min="0.01" placeholder="0,00"
+            <label className="form-label">Valor (R$)</label>
+            <input className="form-input" type="number" step="0.01" min="0.01" placeholder="0,00"
               value={amount} onChange={e => setAmount(e.target.value)} required />
           </div>
 
           {/* Descrição */}
           <div className="form-group">
-            <label>Descrição</label>
-            <input className="input" type="text" placeholder="Ex: Aluguel, Salário..."
+            <label className="form-label">Descrição</label>
+            <input className="form-input" type="text" placeholder="Ex: Aluguel, Salário..."
               value={description} onChange={e => setDescription(e.target.value)} required />
           </div>
 
           {/* Categoria */}
           <div className="form-group">
-            <label>Categoria</label>
-            <select className="input" value={category} onChange={e => setCategory(e.target.value)} required>
+            <label className="form-label">Categoria</label>
+            <select className="form-input" value={category} onChange={e => setCategory(e.target.value)} required>
               <option value="">Selecione...</option>
               {catOptions.map(k => (
                 <option key={k} value={k}>{allCategories[k]?.emoji} {allCategories[k]?.label}</option>
@@ -95,14 +95,14 @@ export default function TransactionModal({ onClose, initial }: Props) {
 
           {/* Data */}
           <div className="form-group">
-            <label>Data</label>
-            <input className="input" type="date" value={date} onChange={e => setDate(e.target.value)} required />
+            <label className="form-label">Data</label>
+            <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} required />
           </div>
 
           {/* Nota */}
           <div className="form-group">
-            <label>Nota (opcional)</label>
-            <input className="input" type="text" placeholder="Observação..."
+            <label className="form-label">Nota (opcional)</label>
+            <input className="form-input" type="text" placeholder="Observação..."
               value={note} onChange={e => setNote(e.target.value)} />
           </div>
 
