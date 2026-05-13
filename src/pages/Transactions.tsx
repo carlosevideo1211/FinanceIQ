@@ -8,7 +8,7 @@ import TxItem from '../components/TxItem';
 import type { Transaction } from '../types';
 
 export default function Transactions() {
-  const { transactions } = useFinance();
+  const { transactions, customCategories = [] } = useFinance();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [showCatManager, setShowCatManager] = useState(false);
@@ -92,7 +92,7 @@ export default function Transactions() {
         </select>
         <select className="form-select" value={catFilter} onChange={e => setCatFilter(e.target.value)}>
           <option value="">Todas categorias</option>
-          {Object.entries(CATEGORIES).map(([k, v]) => (
+          {[...Object.entries(CATEGORIES), ...customCategories.map(c => [c.id, { label: c.label, emoji: c.emoji }])].map(([k, v]: any) => (
             <option key={k} value={k}>{v.emoji} {v.label}</option>
           ))}
         </select>
