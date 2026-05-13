@@ -1,5 +1,5 @@
-import { CATEGORIES } from '../types';
 import { formatBRL, useFinance } from '../context/FinanceContext';
+import { CATEGORIES } from '../types';
 import type { Transaction } from '../types';
 import { Pencil, Trash2 } from 'lucide-react';
 
@@ -9,8 +9,12 @@ interface Props {
 }
 
 export default function TxItem({ tx, onEdit }: Props) {
-  const { deleteTransaction } = useFinance();
-  const cat = CATEGORIES[tx.category];
+  const { customCategories = [], deleteTransaction } = useFinance();
+  const allCategories = {
+    ...CATEGORIES,
+    ...Object.fromEntries(customCategories.map(c => [c.id, { label: c.label, emoji: c.emoji, color: c.color, bg: c.bg }]))
+  };
+  const cat = allCategories[tx.category];
 
   const handleDelete = () => {
     if (confirm(`Excluir "${tx.description}"?`)) deleteTransaction(tx.id);

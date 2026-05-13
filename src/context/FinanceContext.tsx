@@ -13,6 +13,9 @@ interface FinanceCtx {
   addBudget: (b: Omit<Budget, 'id'>) => Promise<void>;
   updateBudget: (b: Budget) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
+  customCategories: import('../types').CustomCategory[];
+  addCustomCategory: (c: Omit<import('../types').CustomCategory, 'id' | 'user_id'>) => Promise<void>;
+  deleteCustomCategory: (id: string) => Promise<void>;
   clearAll: () => Promise<void>;
 }
 
@@ -22,7 +25,16 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [customCategories, setCustomCategories] = useState<import('../types').CustomCategory[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Carregar categorias customizadas
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('custom_categories').select('*').eq('user_id', user.id).then(({ data }) => {
+      if (data) setCustomCategories(data as import('../types').CustomCategory[]);
+    });
+  }, [user]);
 
   // Carregar dados do Supabase
   useEffect(() => {
@@ -128,6 +140,17 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     setBudgets(prev => prev.filter(x => x.id !== id));
   }, [user]);
 
+  const addCustomCategory = async (c: Omit<import('../types').CustomCategory, 'id' | 'user_id'>) => {
+    if (!user) return;
+    const { data, error } = await supabase.from('custom_categories').insert([{ ...c, user_id: user.id }]).select().single();
+    if (!error && data) setCustomCategories(prev => [...prev, data as import('../types').CustomCategory]);
+  };
+
+  const deleteCustomCategory = async (id: string) => {
+    await supabase.from('custom_categories').delete().eq('id', id);
+    setCustomCategories(prev => prev.filter(c => c.id !== id));
+  };
+
   const clearAll = useCallback(async () => {
     if (!user) return;
     await Promise.all([
@@ -142,7 +165,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     <Ctx.Provider value={{
       transactions, budgets, loading,
       addTransaction, updateTransaction, deleteTransaction,
-      addBudget, updateBudget, deleteBudget, clearAll
+      addBudget, updateBudget, deleteBudget, clearAll, customCategories, addCustomCategory, deleteCustomCategory
     }}>
       {children}
     </Ctx.Provider>

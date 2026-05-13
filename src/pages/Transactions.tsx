@@ -3,6 +3,7 @@ import { useFinance, filterByMonth, formatBRL } from '../context/FinanceContext'
 import { CATEGORIES } from '../types';
 import { Plus, Search } from 'lucide-react';
 import TransactionModal from '../components/TransactionModal';
+import CategoryManager from '../components/CategoryManager';
 import TxItem from '../components/TxItem';
 import type { Transaction } from '../types';
 
@@ -10,6 +11,7 @@ export default function Transactions() {
   const { transactions } = useFinance();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const [showCatManager, setShowCatManager] = useState(false);
 
   const now = new Date();
   const [month, setMonth] = useState(now.toISOString().slice(0, 7));
@@ -47,9 +49,14 @@ export default function Transactions() {
           <h2>Lançamentos</h2>
           <p>{filtered.length} transações encontradas</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-secondary" onClick={() => setShowCatManager(true)}>
+            Categorias
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
           <Plus size={16} /> Novo lançamento
-        </button>
+          </button>
+        </div>
       </div>
 
       {/* Month navigator */}
@@ -111,6 +118,7 @@ export default function Transactions() {
         </div>
       )}
 
+      {showCatManager && <CategoryManager onClose={() => setShowCatManager(false)} />}
       {showModal && (
         <TransactionModal
           onClose={() => { setShowModal(false); setEditing(null); }}

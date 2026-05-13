@@ -27,6 +27,16 @@ export interface Goal {
   created_at: string;
 }
 
+export interface CustomCategory {
+  id: string;
+  label: string;
+  emoji: string;
+  color: string;
+  bg: string;
+  type: 'income' | 'expense' | 'both';
+  user_id: string;
+}
+
 export interface Budget {
   id: string;
   category: string;
