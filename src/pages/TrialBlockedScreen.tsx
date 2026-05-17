@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Lock, Crown, Star, Check, MessageCircle } from 'lucide-react'
+import PixModal from '../components/PixModal'
 
 // ============================================================
 // CONFIGURAÇÃO DE PLANOS — Mercado Pago
@@ -34,11 +36,12 @@ const PREMIUM_FEATURES = [
 ]
 
 function PlanCard({
-  name, icon, color, monthly, annual, annualTotal, features, links, highlight
+  name, icon, color, monthly, annual, annualTotal, monthlyNum, annualNum, features, links, highlight, onPixMensal, onPixAnual
 }: {
-  name: string, icon: React.ReactNode, color: string, monthly: string,
-  annual: string, annualTotal: string, features: string[],
-  links: { mensal: string, anual: string }, highlight?: boolean
+  name: string, icon: React.ReactNode, color: string, monthly: string, annual: string,
+  annualTotal: string, monthlyNum: number, annualNum: number, features: string[],
+  links: { mensal: string, anual: string }, highlight?: boolean,
+  onPixMensal: () => void, onPixAnual: () => void
 }) {
   return (
     <div style={{
@@ -78,22 +81,48 @@ function PlanCard({
         ))}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Botões Mercado Pago */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
         <a href={links.mensal} target="_blank" rel="noopener noreferrer" style={{
           display: 'block', padding: '12px', textAlign: 'center', borderRadius: 10,
           background: `linear-gradient(135deg, ${color}, ${color}cc)`,
           color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none',
           boxShadow: `0 4px 15px ${color}44`
         }}>
-          Assinar Mensal — R$ {monthly}/mês
+          💳 Assinar Mensal — R$ {monthly}/mês
         </a>
         <a href={links.anual} target="_blank" rel="noopener noreferrer" style={{
           display: 'block', padding: '10px', textAlign: 'center', borderRadius: 10,
           background: `${color}18`, border: `1px solid ${color}44`,
           color, fontSize: 13, fontWeight: 600, textDecoration: 'none'
         }}>
-          Assinar Anual — R$ {annualTotal}/ano 🏷️
+          💳 Assinar Anual — R$ {annualTotal}/ano 🏷️
         </a>
+      </div>
+
+      {/* Separador PIX */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>ou pague via</span>
+        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+      </div>
+
+      {/* Botões PIX */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+        <button onClick={onPixMensal} style={{
+          padding: '10px', borderRadius: 10, border: '1px solid rgba(34,197,94,0.3)',
+          background: 'rgba(34,197,94,0.08)', color: '#22c55e',
+          fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center'
+        }}>
+          💸 PIX Mensal — R$ {monthly}/mês
+        </button>
+        <button onClick={onPixAnual} style={{
+          padding: '9px', borderRadius: 10, border: '1px solid rgba(34,197,94,0.2)',
+          background: 'rgba(34,197,94,0.05)', color: '#22c55e',
+          fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'center'
+        }}>
+          💸 PIX Anual — R$ {annualTotal}/ano 🏷️
+        </button>
       </div>
     </div>
   )
@@ -101,11 +130,12 @@ function PlanCard({
 
 export default function TrialBlockedScreen() {
   const { user, signOut, profile } = useAuth()
+  const [pixModal, setPixModal] = useState<{ planName: string; amount: number; period: string } | null>(null)
   const daysUsed = profile
     ? Math.floor((Date.now() - new Date(profile.trial_start).getTime()) / (1000 * 60 * 60 * 24))
     : 14
 
-  return (
+  return (<>
     <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #0d0f14 0%, #1a1d2e 50%, #0d0f14 100%)',
@@ -139,22 +169,24 @@ export default function TrialBlockedScreen() {
             name="Básico"
             icon={<Star size={24} />}
             color="#3b82f6"
-            monthly="9,90"
-            annual="8,33"
-            annualTotal="99,99"
+            monthly="9,90" annual="8,33" annualTotal="99,99"
+            monthlyNum={9.90} annualNum={99.99}
             features={BASICO_FEATURES}
             links={{ mensal: MP_LINKS.basico_mensal, anual: MP_LINKS.basico_anual }}
+            onPixMensal={() => setPixModal({ planName: 'Básico Mensal', amount: 9.90, period: 'mês' })}
+            onPixAnual={() => setPixModal({ planName: 'Básico Anual', amount: 99.99, period: 'ano' })}
           />
           <PlanCard
             name="Premium"
             icon={<Crown size={24} />}
             color="#a855f7"
-            monthly="19,90"
-            annual="16,66"
-            annualTotal="199,99"
+            monthly="19,90" annual="16,66" annualTotal="199,99"
+            monthlyNum={19.90} annualNum={199.99}
             features={PREMIUM_FEATURES}
             links={{ mensal: MP_LINKS.premium_mensal, anual: MP_LINKS.premium_anual }}
             highlight
+            onPixMensal={() => setPixModal({ planName: 'Premium Mensal', amount: 19.90, period: 'mês' })}
+            onPixAnual={() => setPixModal({ planName: 'Premium Anual', amount: 199.99, period: 'ano' })}
           />
         </div>
 
@@ -178,5 +210,15 @@ export default function TrialBlockedScreen() {
         </div>
       </div>
     </div>
-  )
+
+    {/* Modal PIX */}
+    {pixModal && (
+      <PixModal
+        planName={pixModal.planName}
+        amount={pixModal.amount}
+        period={pixModal.period}
+        onClose={() => setPixModal(null)}
+      />
+    )}
+  </>)
 }
