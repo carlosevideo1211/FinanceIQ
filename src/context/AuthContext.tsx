@@ -16,10 +16,12 @@ interface AuthContextType {
   profile: Profile | null
   loading: boolean
   trialExpired: boolean
+  isBasic: boolean
   isPremium: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  resetPassword: (email: string) => Promise<{ error: string | null }>
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
@@ -54,7 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const isPremium = profile ? ['premium', 'premium_anual', 'basico_anual'].includes(profile.plan) : false;
+  // isBasic: tem acesso a features do plano básico (pago ou premium)
+  const isBasic = profile ? ['basico', 'basico_anual', 'premium', 'premium_anual'].includes(profile.plan) : false;
+  // isPremium: tem acesso a features exclusivas do plano premium
+  const isPremium = profile ? ['premium', 'premium_anual'].includes(profile.plan) : false;
   const trialExpired = profile
     ? profile.plan === 'trial' && new Date(profile.trial_end) < new Date()
     : false
@@ -74,8 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null)
   }
 
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `https://finance-iq-fawn.vercel.app/reset-password`,
+    })
+    return { error: error?.message ?? null }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, trialExpired, isPremium, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, trialExpired, isBasic, isPremium, signIn, signUp, signOut, resetPassword }}>
       {children}
     </AuthContext.Provider>
   )

@@ -8,7 +8,7 @@ import TxItem from '../components/TxItem';
 import type { Transaction } from '../types';
 
 export default function Dashboard() {
-  const { transactions, budgets } = useFinance();
+  const { transactions, budgets, customCategories } = useFinance();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
 
@@ -21,11 +21,18 @@ export default function Dashboard() {
 
   // Pie chart — expenses by category
   const expByCategory = useMemo(() => groupByCategory(monthTxs.filter(t => t.type === 'expense')), [monthTxs]);
-  const pieData = useMemo(() =>
-    Object.entries(expByCategory)
-      .map(([k, v]) => ({ name: CATEGORIES[k]?.label ?? k, value: v, color: CATEGORIES[k]?.color ?? '#64748b' }))
-      .sort((a, b) => b.value - a.value)
-  , [expByCategory]);
+  const pieData = useMemo(() => {
+    // Mescla categorias padrão + categorias customizadas do usuário
+    const customMap = Object.fromEntries(
+      (customCategories || []).map(c => [c.id, { label: `${c.emoji} ${c.label}`, color: c.color }])
+    );
+    return Object.entries(expByCategory)
+      .map(([k, v]) => {
+        const cat = CATEGORIES[k] || customMap[k];
+        return { name: cat?.label ?? 'Outros', value: v, color: cat?.color ?? '#64748b' };
+      })
+      .sort((a, b) => b.value - a.value);
+  }, [expByCategory, customCategories]);
 
   // Line chart — last 6 months balance
   const lineData = useMemo(() => {

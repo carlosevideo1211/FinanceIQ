@@ -15,6 +15,7 @@ export default function Reports() {
   const { isPremium } = useAuth();
   const now = new Date();
   const [month, setMonth] = useState(now.toISOString().slice(0, 7));
+  const [showUpgradeHint, setShowUpgradeHint] = useState(false);
 
   const navMonth = (dir: number) => {
     const d = new Date(month + '-01');
@@ -193,24 +194,46 @@ export default function Reports() {
           <p>Análise completa das suas finanças</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={isPremium ? exportCSV : () => alert('Funcionalidade Premium! Faça upgrade para exportar Excel.')} style={{
+          <button onClick={isPremium ? exportCSV : () => setShowUpgradeHint(true)} style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-            background: 'rgba(34,197,94,0.15)', color: '#22c55e',
-            border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8,
-            fontWeight: 600, cursor: 'pointer', fontSize: 13
+            background: isPremium ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)',
+            color: isPremium ? '#22c55e' : 'var(--text-muted)',
+            border: `1px solid ${isPremium ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}`,
+            borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13
           }}>
             <FileSpreadsheet size={15} /> {isPremium ? 'Excel' : '🔒 Excel'}
           </button>
-          <button onClick={isPremium ? exportPDF : () => alert('Funcionalidade Premium! Faça upgrade para exportar PDF.')} style={{
+          <button onClick={isPremium ? exportPDF : () => setShowUpgradeHint(true)} style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-            background: 'rgba(108,99,255,0.15)', color: '#6C63FF',
-            border: '1px solid rgba(108,99,255,0.3)', borderRadius: 8,
-            fontWeight: 600, cursor: 'pointer', fontSize: 13
+            background: isPremium ? 'rgba(108,99,255,0.15)' : 'rgba(255,255,255,0.05)',
+            color: isPremium ? '#6C63FF' : 'var(--text-muted)',
+            border: `1px solid ${isPremium ? 'rgba(108,99,255,0.3)' : 'rgba(255,255,255,0.1)'}`,
+            borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13
           }}>
             <FileDown size={15} /> {isPremium ? 'PDF' : '🔒 PDF'}
           </button>
         </div>
       </div>
+
+      {/* Toast upgrade hint */}
+      {showUpgradeHint && (
+        <div style={{
+          position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
+          background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+          border: '1px solid rgba(168,85,247,0.4)', borderRadius: 12, padding: '14px 20px',
+          zIndex: 200, display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          fontSize: 13, color: '#fff', whiteSpace: 'nowrap'
+        }}>
+          👑 Exportação disponível no Plano Premium
+          <button
+            onClick={() => setShowUpgradeHint(false)}
+            style={{ background: 'linear-gradient(135deg, #6C63FF, #a855f7)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}
+          >
+            Ver planos
+          </button>
+          <button onClick={() => setShowUpgradeHint(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 16 }}>×</button>
+        </div>
+      )}
 
       {/* Bar chart */}
       <div className="card" style={{ marginBottom: 16 }}>
