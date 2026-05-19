@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Crown, Star, Check, MessageCircle, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import PixModal from '../components/PixModal'
 
 // ============================================================
 // CONFIGURAÇÃO — Mercado Pago
@@ -42,12 +44,13 @@ interface PlansPageProps {
 
 export default function PlansPage({ onBack }: PlansPageProps) {
   const { profile } = useAuth()
+  const [pixModal, setPixModal] = useState<{ planName: string; amount: number; period: string } | null>(null)
 
   const daysLeft = profile?.plan === 'trial'
     ? Math.max(0, Math.ceil((new Date(profile.trial_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0
 
-  return (
+  return (<>
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 16px' }}>
 
       {/* Header */}
@@ -124,21 +127,46 @@ export default function PlansPage({ onBack }: PlansPageProps) {
             ))}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
             <a href={MP_LINKS.basico_mensal} target="_blank" rel="noopener noreferrer" style={{
               display: 'block', padding: '13px', textAlign: 'center', borderRadius: 11,
               background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)',
               color: '#3b82f6', fontWeight: 700, fontSize: 14, textDecoration: 'none'
             }}>
-              Assinar por R$ 9,90/mês
+              💳 Assinar por R$ 9,90/mês
             </a>
             <a href={MP_LINKS.basico_anual} target="_blank" rel="noopener noreferrer" style={{
               display: 'block', padding: '10px', textAlign: 'center', borderRadius: 10,
               border: '1px solid var(--border)',
               color: 'var(--text-muted)', fontWeight: 600, fontSize: 13, textDecoration: 'none'
             }}>
-              🏷️ Anual por R$ 99,99 (2 meses grátis)
+              💳 Anual por R$ 99,99 (2 meses grátis) 🏷️
             </a>
+          </div>
+
+          {/* Separador PIX */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>ou pague via</span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+          </div>
+
+          {/* Botões PIX */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            <button onClick={() => setPixModal({ planName: 'Básico Mensal', amount: 9.90, period: 'mês' })} style={{
+              padding: '10px', borderRadius: 10, border: '1px solid rgba(34,197,94,0.3)',
+              background: 'rgba(34,197,94,0.08)', color: '#22c55e',
+              fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center'
+            }}>
+              💸 PIX Mensal — R$ 9,90/mês
+            </button>
+            <button onClick={() => setPixModal({ planName: 'Básico Anual', amount: 99.99, period: 'ano' })} style={{
+              padding: '9px', borderRadius: 10, border: '1px solid rgba(34,197,94,0.2)',
+              background: 'rgba(34,197,94,0.05)', color: '#22c55e',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'center'
+            }}>
+              💸 PIX Anual — R$ 99,99/ano 🏷️
+            </button>
           </div>
         </div>
 
@@ -189,22 +217,47 @@ export default function PlansPage({ onBack }: PlansPageProps) {
             ))}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
             <a href={MP_LINKS.premium_mensal} target="_blank" rel="noopener noreferrer" style={{
               display: 'block', padding: '13px', textAlign: 'center', borderRadius: 11,
               background: 'linear-gradient(135deg, #6C63FF, #a855f7)',
               color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none',
               boxShadow: '0 4px 15px rgba(108,99,255,0.4)'
             }}>
-              ✨ Assinar por R$ 19,90/mês
+              💳 Assinar por R$ 19,90/mês ✨
             </a>
             <a href={MP_LINKS.premium_anual} target="_blank" rel="noopener noreferrer" style={{
               display: 'block', padding: '10px', textAlign: 'center', borderRadius: 10,
               background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)',
               color: '#a855f7', fontWeight: 600, fontSize: 13, textDecoration: 'none'
             }}>
-              🏷️ Anual por R$ 199,99 (2 meses grátis)
+              💳 Anual por R$ 199,99 (2 meses grátis) 🏷️
             </a>
+          </div>
+
+          {/* Separador PIX */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>ou pague via</span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+          </div>
+
+          {/* Botões PIX */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            <button onClick={() => setPixModal({ planName: 'Premium Mensal', amount: 19.90, period: 'mês' })} style={{
+              padding: '10px', borderRadius: 10, border: '1px solid rgba(34,197,94,0.3)',
+              background: 'rgba(34,197,94,0.08)', color: '#22c55e',
+              fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center'
+            }}>
+              💸 PIX Mensal — R$ 19,90/mês
+            </button>
+            <button onClick={() => setPixModal({ planName: 'Premium Anual', amount: 199.99, period: 'ano' })} style={{
+              padding: '9px', borderRadius: 10, border: '1px solid rgba(34,197,94,0.2)',
+              background: 'rgba(34,197,94,0.05)', color: '#22c55e',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'center'
+            }}>
+              💸 PIX Anual — R$ 199,99/ano 🏷️
+            </button>
           </div>
         </div>
       </div>
@@ -238,5 +291,15 @@ export default function PlansPage({ onBack }: PlansPageProps) {
         </a>
       </div>
     </div>
-  )
+
+    {/* Modal PIX */}
+    {pixModal && (
+      <PixModal
+        planName={pixModal.planName}
+        amount={pixModal.amount}
+        period={pixModal.period}
+        onClose={() => setPixModal(null)}
+      />
+    )}
+  </>)
 }
